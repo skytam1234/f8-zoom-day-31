@@ -92,8 +92,9 @@ const todoTask = {
   },
   async getTask(id) {
     console.log(id);
+
+    this.task = await this.send(`http://localhost:3000/tasks/` + id);
     console.log(this.task);
-    await this.send(`http://localhost:3000/tasks/${id}`, "GET");
   },
   createTask(newTask) {
     const methods = {
