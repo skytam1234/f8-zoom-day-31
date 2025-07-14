@@ -81,6 +81,7 @@ const todoTask = {
         document.body.appendChild(toastElement);
     },
     addCurrentTask() {
+        console.log(this.task);
         this.taskTitle.value = this.task.title;
         this.taskDescription.value = this.task.description;
         this.taskCategory.value = this.task.category;
@@ -110,7 +111,7 @@ const todoTask = {
     async getTask(id) {
         this.task = await this.send(`http://localhost:3000/tasks/` + id);
     },
-    createTask(newTask) {
+    async createTask(newTask) {
         const methods = {
             method: "POST",
             headers: {
@@ -118,7 +119,8 @@ const todoTask = {
             },
             body: JSON.stringify(newTask),
         };
-        const respond = this.send("http://localhost:3000/tasks", methods);
+        this.task = await this.send("http://localhost:3000/tasks", methods);
+        console.log(this.task);
     },
     async editTask(id, newTask) {
         const methods = {
@@ -297,7 +299,7 @@ const todoTask = {
                     new FormData(this.addOrEditForm)
                 );
                 if (!this.tasks.find((task) => task.title === newTask.title)) {
-                    this.createTask.call(this, newTask);
+                    await this.createTask.call(this, newTask);
                     this.createToast(
                         this.toasts[0],
                         "Thành công rồi bạn nhé! Yên tâm đi"
@@ -352,50 +354,7 @@ const todoTask = {
                     new FormData(this.addOrEditForm)
                 );
                 await this.editTask.call(this, this.task.id, newTask);
-                const oldTask = this.listTask.querySelector(
-                    `.task-card[data-id="${this.task.id}"]`
-                );
-                this.listTask.removeChild(oldTask);
-                this.createToast(
-                    this.toasts[0],
-                    "Thành công rồi bạn nhé! Yên tâm đi"
-                );
-                const div = document.createElement("div");
-                div.classList.add(`task-card`);
-                div.classList.add(this.escape(newTask.color));
-                const html = `
-                      <div class="task-header">
-          <h3 class="task-title">${this.escape(newTask.title)}</h3>
-          <button class="task-menu">
-            <i class="fa-solid fa-ellipsis fa-icon"></i>
-            <div class="dropdown-menu">
-              <div class="dropdown-item edit-btn" data-id="${this.escape(
-                  this.task.id
-              )}">
-                <i class="fa-solid fa-pen-to-square fa-icon"></i>
-                Edit
-              </div>
-              <div class="dropdown-item complete-btn" data-id="${this.escape(
-                  this.task.id
-              )}">
-                <i class="fa-solid fa-check fa-icon"></i>
-                ${newTask.isCompleted ? "Mark as Active" : "Mark as Complete"} 
-              </div>
-              <div class="dropdown-item delete delete-btn" data-id="${this.escape(
-                  this.task.id
-              )}">
-                <i class="fa-solid fa-trash fa-icon"></i>
-                Delete
-              </div>
-            </div>
-          </button>
-        </div>
-        <p class="task-description">${this.escape(newTask.description)}</p>
-        <div class="task-time">${this.customTime(
-            this.escape(newTask.startTime)
-        )} - ${this.customTime(this.escape(newTask.endTime))}</div>`;
-                div.innerHTML = html;
-                this.listTask.appendChild(div);
+                this.renderTask.call(this);
                 this.toggleTask();
             }
         };
@@ -405,8 +364,9 @@ const todoTask = {
             const deleteBtn = e.target.closest(`.delete-btn`);
             if (editBtn) {
                 this.isInsert = false;
-                await this.renderTitleFormTask.call(this);
+                console.log(editBtn.dataset.id);
                 await this.getTask.call(this, editBtn.dataset.id);
+                await this.renderTitleFormTask.call(this);
                 await this.toggleTask.call(this);
                 await this.addCurrentTask.call(this);
             }
