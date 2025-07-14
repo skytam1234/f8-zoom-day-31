@@ -290,7 +290,7 @@ const todoTask = {
                 this.cancelModalBtn.onclick();
             }
         };
-        this.addOrEditForm.onsubmit = (e) => {
+        this.addOrEditForm.onsubmit = async (e) => {
             e.preventDefault();
             if (this.isInsert) {
                 const newTask = Object.fromEntries(
@@ -309,44 +309,35 @@ const todoTask = {
                     div.classList.add(this.escape(newTask.color));
                     const html = `
                       <div class="task-header">
-                        <h3 class="task-title">${this.escape(
-                            newTask.title
-                        )}</h3>
-                        <button class="task-menu">
-                          <i class="fa-solid fa-ellipsis fa-icon"></i>
-                          <div class="dropdown-menu">
-                            <div class="dropdown-item edit-btn" data-id="${
-                                newTask.id
-                            }">
-                              <i class="fa-solid fa-pen-to-square fa-icon"></i>
-                              Edit
-                            </div>
-                            <div class="dropdown-item complete-btn" data-index="${
-                                newTask.id
-                            }">
-                              <i class="fa-solid fa-check fa-icon"></i>
-                              ${
-                                  newTask.isCompleted
-                                      ? "Mark as Active"
-                                      : "Mark as Complete"
-                              }
-                            </div>
-                            <div class="dropdown-item delete delete-btn" data-index="${
-                                newTask.id
-                            }">
-                              <i class="fa-solid fa-trash fa-icon"></i>
-                              Delete
-                            </div>
-                          </div>
-                        </button>
-                      </div>
-                      <p class="task-description">${this.escape(
-                          newTask.description
-                      )}</p>
-                      <div class="task-time">${this.escape(
-                          newTask.startTime
-                      )} - ${this.escape(newTask.endTime)}</div>
-                    `;
+          <h3 class="task-title">${this.escape(newTask.title)}</h3>
+          <button class="task-menu">
+            <i class="fa-solid fa-ellipsis fa-icon"></i>
+            <div class="dropdown-menu">
+              <div class="dropdown-item edit-btn" data-id="${this.escape(
+                  this.task.id
+              )}">
+                <i class="fa-solid fa-pen-to-square fa-icon"></i>
+                Edit
+              </div>
+              <div class="dropdown-item complete-btn" data-id="${this.escape(
+                  this.task.id
+              )}">
+                <i class="fa-solid fa-check fa-icon"></i>
+                ${newTask.isCompleted ? "Mark as Active" : "Mark as Complete"} 
+              </div>
+              <div class="dropdown-item delete delete-btn" data-id="${this.escape(
+                  this.task.id
+              )}">
+                <i class="fa-solid fa-trash fa-icon"></i>
+                Delete
+              </div>
+            </div>
+          </button>
+        </div>
+        <p class="task-description">${this.escape(newTask.description)}</p>
+        <div class="task-time">${this.customTime(
+            this.escape(newTask.startTime)
+        )} - ${this.customTime(this.escape(newTask.endTime))}</div>`;
                     div.innerHTML = html;
                     this.listTask.appendChild(div);
                     this.toggleTask();
@@ -360,7 +351,7 @@ const todoTask = {
                 const newTask = Object.fromEntries(
                     new FormData(this.addOrEditForm)
                 );
-                this.editTask.call(this, this.task.id, newTask);
+                await this.editTask.call(this, this.task.id, newTask);
                 const oldTask = this.listTask.querySelector(
                     `.task-card[data-id="${this.task.id}"]`
                 );
@@ -373,24 +364,26 @@ const todoTask = {
                 div.classList.add(`task-card`);
                 div.classList.add(this.escape(newTask.color));
                 const html = `
-        <div class="task-header">
+                      <div class="task-header">
           <h3 class="task-title">${this.escape(newTask.title)}</h3>
           <button class="task-menu">
             <i class="fa-solid fa-ellipsis fa-icon"></i>
             <div class="dropdown-menu">
-              <div class="dropdown-item edit-btn" data-id="${newTask.id}">
+              <div class="dropdown-item edit-btn" data-id="${this.escape(
+                  this.task.id
+              )}">
                 <i class="fa-solid fa-pen-to-square fa-icon"></i>
                 Edit
               </div>
-              <div class="dropdown-item complete-btn" data-index="${
-                  newTask.id
-              }">
+              <div class="dropdown-item complete-btn" data-id="${this.escape(
+                  this.task.id
+              )}">
                 <i class="fa-solid fa-check fa-icon"></i>
                 ${newTask.isCompleted ? "Mark as Active" : "Mark as Complete"} 
               </div>
-              <div class="dropdown-item delete delete-btn" data-index="${
-                  newTask.id
-              }">
+              <div class="dropdown-item delete delete-btn" data-id="${this.escape(
+                  this.task.id
+              )}">
                 <i class="fa-solid fa-trash fa-icon"></i>
                 Delete
               </div>
@@ -398,10 +391,9 @@ const todoTask = {
           </button>
         </div>
         <p class="task-description">${this.escape(newTask.description)}</p>
-        <div class="task-time">${this.escape(
-            newTask.startTime
-        )} - ${this.escape(newTask.endTime)}</div>
-      `;
+        <div class="task-time">${this.customTime(
+            this.escape(newTask.startTime)
+        )} - ${this.customTime(this.escape(newTask.endTime))}</div>`;
                 div.innerHTML = html;
                 this.listTask.appendChild(div);
                 this.toggleTask();
@@ -413,13 +405,10 @@ const todoTask = {
             const deleteBtn = e.target.closest(`.delete-btn`);
             if (editBtn) {
                 this.isInsert = false;
-                this.renderTitleFormTask.call(this);
-                Promise.all([this.getTask.call(this, editBtn.dataset.id)]).then(
-                    () => {
-                        this.toggleTask.call(this);
-                        this.addCurrentTask.call(this);
-                    }
-                );
+                await this.renderTitleFormTask.call(this);
+                await this.getTask.call(this, editBtn.dataset.id);
+                await this.toggleTask.call(this);
+                await this.addCurrentTask.call(this);
             }
             if (completeOrActiveBtn) {
                 const newTask = { isCompleted: true };
